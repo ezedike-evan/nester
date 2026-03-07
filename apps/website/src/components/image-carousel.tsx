@@ -36,14 +36,15 @@ export function ImageCarousel() {
                 {track.map((item, i) => (
                     <div
                         key={i}
-                        className="flex-shrink-0 w-36 h-48 sm:w-44 sm:h-60 md:w-52 md:h-68 lg:w-30 lg:h-30 rounded-2xl lg:rounded-3xl overflow-hidden flex items-center justify-center shadow-sm"
+                        className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-32 lg:h-32 rounded-2xl lg:rounded-3xl overflow-hidden flex items-center justify-center shadow-sm"
                         style={{ backgroundColor: item.bg }}
                     >
-                        <div className="relative w-22 h-22 sm:w-28 sm:h-28 md:w-36 md:h-36 lg:w-22 lg:h-22">
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-20 lg:h-20">
                             <Image
                                 src={item.src}
                                 alt={item.alt}
                                 fill
+                                sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
                                 className="object-contain"
                                 draggable={false}
                             />

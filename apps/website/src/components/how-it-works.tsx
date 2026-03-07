@@ -123,11 +123,7 @@ function DepositScene({ playing }: { playing: boolean }) {
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06, duration: 0.35 }}
-              className="rounded-xl"
-              style={isSelected ? {
-                padding: "1.5px",
-                background: "linear-gradient(90deg, #1d4ed8, #111111 50%, #ca8a04)",
-              } : {}}
+              className={`rounded-xl ${isSelected ? 'gradient-border-active' : ''}`}
             >
               <div
                 className={`rounded-[10px] px-4 py-3 flex items-center gap-3 transition-all duration-300 ${
@@ -153,7 +149,7 @@ function DepositScene({ playing }: { playing: boolean }) {
                   <div className="w-full h-[3px] bg-black/[0.07] rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ background: isSelected ? "linear-gradient(90deg, #1d4ed8, #111111 50%, #ca8a04)" : "rgba(0,0,0,0.7)" }}
+                      style={{ background: isSelected ? "linear-gradient(90deg, #6025f5, #ff5555 50%, #facc15)" : "rgba(0,0,0,0.7)" }}
                       initial={{ width: 0 }}
                       animate={{ width: barsVisible ? `${v.bar}%` : 0 }}
                       transition={{ duration: 1.1, delay: i * 0.1, ease: [0.23, 1, 0.32, 1] }}
@@ -269,11 +265,12 @@ function OptimizeScene({ playing }: { playing: boolean }) {
   }, [playing]);
 
   return (
-    <div className="relative w-full select-none" style={{ height: 310, width: 390 }}>
+    <div className="relative w-full select-none mx-auto" style={{ height: 310, maxWidth: 390 }}>
       {/* SVG for paths + dots — same coordinate space */}
       <svg
-        width={390} height={310}
-        className="absolute inset-0 pointer-events-none"
+        viewBox="0 0 390 310"
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        preserveAspectRatio="xMidYMid meet"
         style={{ overflow: "visible" }}
       >
         <defs>
@@ -472,15 +469,11 @@ function OfframpScene({ playing }: { playing: boolean }) {
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: step >= i ? 1 : 0.22, x: 0 }}
             transition={{ duration: 0.45 }}
-            className="rounded-xl"
-            style={step === i ? {
-              padding: "1.5px",
-              background: "linear-gradient(90deg, #1d4ed8, #111111 50%, #ca8a04)",
-            } : {}}
+            className={`rounded-xl ${step === i ? 'gradient-border-active' : ''}`}
           >
             <div
               className={`rounded-[10px] px-5 py-3.5 flex items-center justify-between transition-all duration-300 ${
-                step === i ? "bg-[hsl(0,0%,90%)] shadow-md" :
+                step === i ? "bg-[hsl(0,0%,90%)] shadow-md border border-transparent" :
                 step > i   ? "border border-black/10 bg-white/65" :
                              "border border-black/[0.06] bg-white/40"
               }`}
@@ -907,7 +900,7 @@ export function HowItWorks() {
                   animate={{ scaleX: isActive ? 1 : 0, opacity: isActive ? 1 : 0 }}
                   transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
                   className="absolute top-0 left-0 right-0 h-[2.5px] origin-left"
-                  style={{ background: "linear-gradient(90deg, #1d4ed8 0%, #111111 45%, #ca8a04 100%)" }}
+                  style={{ background: "linear-gradient(90deg, #6025f5 0%, #ff5555 45%, #facc15 100%)" }}
                 />
                 <span
                   className={`text-[8px] font-bold tracking-[0.22em] uppercase transition-colors duration-200 ${
