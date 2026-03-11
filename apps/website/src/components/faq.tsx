@@ -157,8 +157,7 @@ function FaqItem({
 
   useEffect(() => {
     if (isOpen) {
-      setPhase("redacted");
-      const t1 = setTimeout(() => setPhase("dissolving"), 600);
+      setPhase("redacted");      const t1 = setTimeout(() => setPhase("dissolving"), 600);
       const t2 = setTimeout(() => setPhase("revealed"), 1800);
       return () => {
         clearTimeout(t1);

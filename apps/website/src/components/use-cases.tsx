@@ -90,8 +90,7 @@ function useCounter(
 
   useEffect(() => {
     if (!playing) {
-      setValue(0);
-      return;
+      setValue(0);      return;
     }
 
     const t = setTimeout(() => {
@@ -268,14 +267,12 @@ function YieldScene({ playing }: { playing: boolean }) {
 
   useEffect(() => {
     if (!playing) {
-      setSeq(0);
-      setSelectedStrategy(-1);
+      setSeq(0);      setSelectedStrategy(-1);
       setSelectedProtocol(-1);
       return;
     }
 
-    setSeq(0);
-    setSelectedStrategy(-1);
+    setSeq(0);    setSelectedStrategy(-1);
     setSelectedProtocol(-1);
 
     const timers = [
@@ -657,13 +654,11 @@ function SavingsScene({ playing }: { playing: boolean }) {
 
   useEffect(() => {
     if (!playing) {
-      setSeq(0);
-      setSelectedGoal(-1);
+      setSeq(0);      setSelectedGoal(-1);
       return;
     }
 
-    setSeq(0);
-    setSelectedGoal(-1);
+    setSeq(0);    setSelectedGoal(-1);
 
     const timers = [
       setTimeout(() => setSeq(1), 1200),
@@ -926,11 +921,9 @@ function OfframpScene({ playing }: { playing: boolean }) {
 
   useEffect(() => {
     if (!playing) {
-      setSeq(0);
-      return;
+      setSeq(0);      return;
     }
-    setSeq(0);
-    const timings = [
+    setSeq(0);    const timings = [
       800,  // 1: Packet User -> Escrow, show Escrow
       1800, // 2: Packet Escrow -> Router, show Router & Oracle
       3200, // 3: Packets Router -> LPs, show LPs loading rings
@@ -1186,12 +1179,10 @@ function AiScene({ playing }: { playing: boolean }) {
 
   useEffect(() => {
     if (!playing) {
-      setSeq(0);
-      return;
+      setSeq(0);      return;
     }
 
-    setSeq(0);
-    const timers = [
+    setSeq(0);    const timers = [
       setTimeout(() => setSeq(1), 800),
       setTimeout(() => setSeq(2), 2000),
       setTimeout(() => setSeq(3), 2800),
@@ -1504,8 +1495,7 @@ export function UseCases() {
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
 
   useEffect(() => {
-    setPlaying(false);
-    const t = setTimeout(() => setPlaying(true), 60);
+    setPlaying(false);    const t = setTimeout(() => setPlaying(true), 60);
     return () => clearTimeout(t);
   }, [activeIdx]);
 

@@ -95,9 +95,7 @@ function DepositScene({ playing }: { playing: boolean }) {
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
-    if (!playing) { setSeq(0); setSelectedIdx(-1); setBarsVisible(false); setConfirmed(false); return; }
-    setSeq(0); setSelectedIdx(-1); setBarsVisible(false); setConfirmed(false);
-    const t1 = setTimeout(() => setSeq(1), 600);
+    if (!playing) { setSeq(0); setSelectedIdx(-1); setBarsVisible(false); setConfirmed(false); return; }    setSeq(0); setSelectedIdx(-1); setBarsVisible(false); setConfirmed(false);    const t1 = setTimeout(() => setSeq(1), 600);
     const t2 = setTimeout(() => { setSeq(2); setSelectedIdx(1); }, 1400);
     const t3 = setTimeout(() => { setSeq(3); setBarsVisible(true); }, 1900);
     const t4 = setTimeout(() => setSeq(4), 3200);
@@ -266,10 +264,8 @@ function OptimizeScene({ playing }: { playing: boolean }) {
       tick++;
       setApyIdx((p) => (p + 1) % blendApy.length);
       if (tick >= 6) clearInterval(iv);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, 900);
     return () => { clearInterval(iv); [t1, t2].forEach(clearTimeout); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing]);
 
   return (
@@ -459,9 +455,7 @@ function OfframpScene({ playing }: { playing: boolean }) {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!playing) { setStep(-1); setDone(false); return; }
-    setStep(-1); setDone(false);
-    const t0 = setTimeout(() => setStep(0), 400);
+    if (!playing) { setStep(-1); setDone(false); return; }    setStep(-1); setDone(false);    const t0 = setTimeout(() => setStep(0), 400);
     const t1 = setTimeout(() => setStep(1), 1500);
     const t2 = setTimeout(() => setStep(2), 2800);
     const t3 = setTimeout(() => setDone(true), 3600);
@@ -578,9 +572,7 @@ function AiScene({ playing }: { playing: boolean }) {
   const [riskScore, setRiskScore] = useState(3.2);
 
   useEffect(() => {
-    if (!playing) { setVisibleMsgs(0); setTyping(false); setRiskScore(3.2); return; }
-    setVisibleMsgs(0); setTyping(false); setRiskScore(3.2);
-    const timings = [400, 1800, 3400, 4800];
+    if (!playing) { setVisibleMsgs(0); setTyping(false); setRiskScore(3.2); return; }    setVisibleMsgs(0); setTyping(false); setRiskScore(3.2);    const timings = [400, 1800, 3400, 4800];
     const handles = timings.map((t, i) =>
       setTimeout(() => {
         setVisibleMsgs(i + 1);
@@ -748,9 +740,7 @@ function ArchitectureScene({ playing }: { playing: boolean }) {
   const [flowActive, setFlowActive] = useState(false);
 
   useEffect(() => {
-    if (!playing) { setActiveLayer(-1); setFlowActive(false); return; }
-    setActiveLayer(-1); setFlowActive(false);
-    const t0 = setTimeout(() => setActiveLayer(0), 500);
+    if (!playing) { setActiveLayer(-1); setFlowActive(false); return; }    setActiveLayer(-1); setFlowActive(false);    const t0 = setTimeout(() => setActiveLayer(0), 500);
     const t1 = setTimeout(() => setActiveLayer(1), 1400);
     const t2 = setTimeout(() => setActiveLayer(2), 2300);
     const t3 = setTimeout(() => setActiveLayer(3), 3200);
@@ -937,8 +927,7 @@ export function HowItWorks() {
 
   /* Trigger playing on mount/step change */
   useEffect(() => {
-    setPlaying(false);
-    const t = setTimeout(() => setPlaying(true), 60);
+    setPlaying(false);    const t = setTimeout(() => setPlaying(true), 60);
     return () => clearTimeout(t);
   }, [active]);
 
