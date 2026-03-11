@@ -23,12 +23,12 @@ export function ImageCarousel() {
             {/* Left smoke fade */}
             <div
                 className="pointer-events-none absolute left-0 top-0 h-full w-16 sm:w-24 md:w-40 lg:w-48 z-10"
-                style={{ background: "linear-gradient(to right, hsl(0,0%,85%) 0%, transparent 100%)" }}
+                style={{ background: "linear-gradient(to right, #fafafa 0%, transparent 100%)" }}
             />
             {/* Right smoke fade */}
             <div
                 className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-24 md:w-40 lg:w-48 z-10"
-                style={{ background: "linear-gradient(to left, hsl(0,0%,85%) 0%, transparent 100%)" }}
+                style={{ background: "linear-gradient(to left, #fafafa 0%, transparent 100%)" }}
             />
 
             {/* Scrolling track — contains two identical sets for seamless loop */}

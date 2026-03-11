@@ -40,6 +40,14 @@ const STEPS = [
     body: "Prometheus reads your portfolio against live market data, protocol health and sentiment — then delivers plain-language recommendations with one-click execution.",
     tab: "Personalized AI advice, always on.",
   },
+  {
+    id: "architecture",
+    step: "05",
+    label: "The Stack",
+    headline: "Four layers.\nOne seamless\ninfrastructure.",
+    body: "From deposit to yield to off-ramp — Nester\u2019s layered stack handles every step. Prometheus sits on top, monitoring risk, rebalancing funds, and routing payouts through our LP network in real time.",
+    tab: "The complete architecture, end to end.",
+  },
 ];
 
 /* ─────────────────────────────────────────────────────────────────
@@ -681,15 +689,238 @@ function AiScene({ playing }: { playing: boolean }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────
+   PANEL 5 — ARCHITECTURE  (layered infrastructure stack)
+───────────────────────────────────────────────────────────────── */
+const ARCH_LAYERS = [
+  {
+    label: "SAVINGS LAYER",
+    desc: "Stablecoins deposited into smart vaults",
+    detail: "$5,000 USDC",
+    color: "#6025f5",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M5 5V3.5a3 3 0 016 0V5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    label: "YIELD LAYER",
+    desc: "Auto-diversified across Aave, Blend & Kamino",
+    detail: "9.8% APY",
+    color: "#ff5555",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <path d="M2 13l4-5 3 3 5-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    label: "OFFRAMP LAYER",
+    desc: "LP nodes route fiat via live banking APIs",
+    detail: "~3 sec",
+    color: "#facc15",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="14" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M1 7.5h14" stroke="currentColor" strokeWidth="1.3"/>
+      </svg>
+    ),
+  },
+  {
+    label: "AI LAYER",
+    desc: "Prometheus monitors risk, rebalances & advises",
+    detail: "24/7",
+    color: "#6025f5",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.8 3.8l1.4 1.4M10.8 10.8l1.4 1.4M3.8 12.2l1.4-1.4M10.8 5.2l1.4-1.4" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+];
+
+const CONNECTOR_LABELS = ["funds diversify", "yield accrues", "data + signals"];
+
+function ArchitectureScene({ playing }: { playing: boolean }) {
+  const [activeLayer, setActiveLayer] = useState(-1);
+  const [flowActive, setFlowActive] = useState(false);
+
+  useEffect(() => {
+    if (!playing) { setActiveLayer(-1); setFlowActive(false); return; }
+    setActiveLayer(-1); setFlowActive(false);
+    const t0 = setTimeout(() => setActiveLayer(0), 500);
+    const t1 = setTimeout(() => setActiveLayer(1), 1400);
+    const t2 = setTimeout(() => setActiveLayer(2), 2300);
+    const t3 = setTimeout(() => setActiveLayer(3), 3200);
+    const t4 = setTimeout(() => setFlowActive(true), 4000);
+    return () => [t0, t1, t2, t3, t4].forEach(clearTimeout);
+  }, [playing]);
+
+  return (
+    <div className="w-full select-none flex flex-col">
+      {ARCH_LAYERS.map((layer, i) => (
+        <React.Fragment key={layer.label}>
+          {/* Layer card */}
+          <motion.div
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: activeLayer >= i ? 1 : 0.15, x: activeLayer >= i ? 0 : -16 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className={`rounded-xl px-4 py-3 flex items-center gap-3 transition-all duration-300 ${
+              activeLayer === i
+                ? "bg-[hsl(0,0%,90%)] shadow-md border border-black/[0.12]"
+                : activeLayer > i
+                  ? "border border-black/[0.08] bg-white/60"
+                  : "border border-black/[0.04] bg-white/30"
+            }`}
+          >
+            {/* Color icon */}
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300"
+              style={{
+                backgroundColor: activeLayer >= i ? layer.color + "18" : "rgba(0,0,0,0.03)",
+                color: activeLayer >= i ? layer.color : "rgba(0,0,0,0.2)",
+              }}
+            >
+              {layer.icon}
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className={`text-[8px] font-bold tracking-[0.18em] uppercase transition-colors duration-300 ${
+                  activeLayer >= i ? "text-black/50" : "text-black/15"
+                }`}>
+                  {layer.label}
+                </span>
+                {i === 3 && flowActive && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1"
+                  >
+                    <motion.span
+                      animate={{ opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 1.4, repeat: Infinity }}
+                      className="w-1.5 h-1.5 rounded-full inline-block"
+                      style={{ backgroundColor: layer.color }}
+                    />
+                    <span className="text-[7px] tracking-wider uppercase font-bold" style={{ color: layer.color, opacity: 0.7 }}>LIVE</span>
+                  </motion.span>
+                )}
+              </div>
+              <p className={`text-[10.5px] leading-tight transition-colors duration-300 m-0 ${
+                activeLayer >= i ? "text-black/55" : "text-black/12"
+              }`}>
+                {layer.desc}
+              </p>
+            </div>
+
+            {/* Detail badge */}
+            <motion.span
+              animate={activeLayer === i ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 0.3 }}
+              className={`text-[10px] font-bold tabular-nums flex-shrink-0 px-2.5 py-1 rounded-lg transition-all duration-300 ${
+                activeLayer >= i
+                  ? "text-black/60 bg-black/[0.05] border border-black/[0.08]"
+                  : "text-black/10"
+              }`}
+            >
+              {layer.detail}
+            </motion.span>
+          </motion.div>
+
+          {/* Connector between layers */}
+          {i < ARCH_LAYERS.length - 1 && (
+            <div className="relative flex items-center justify-center" style={{ height: 16 }}>
+              <motion.div
+                className="w-px"
+                style={{
+                  height: 16,
+                  transformOrigin: "top",
+                  background: "repeating-linear-gradient(to bottom, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 4px, transparent 4px, transparent 8px)",
+                }}
+                initial={{ scaleY: 0, opacity: 0 }}
+                animate={{ scaleY: activeLayer > i ? 1 : 0, opacity: activeLayer > i ? 1 : 0 }}
+                transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+              />
+              {activeLayer > i && (
+                <motion.div
+                  className="absolute w-[5px] h-[5px] rounded-full bg-black/50"
+                  animate={{ y: [-8, 8] }}
+                  transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }}
+                />
+              )}
+              {activeLayer > i && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.35 }}
+                  transition={{ delay: 0.2 }}
+                  className="absolute left-[calc(50%+12px)] text-[7px] text-black/35 font-mono whitespace-nowrap"
+                >
+                  {CONNECTOR_LABELS[i]}
+                </motion.span>
+              )}
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Prometheus monitoring strip — appears after all layers active */}
+      {flowActive && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="mt-3 rounded-xl border border-black/[0.08] bg-black/[0.03] px-4 py-3"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <motion.span
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-[8px] tracking-[0.2em] uppercase font-bold"
+              style={{ color: "#6025f5", opacity: 0.6 }}
+            >
+              Prometheus Monitoring
+            </motion.span>
+            <span className="text-[8px] text-black/25 font-mono">all layers</span>
+          </div>
+          <div className="flex gap-1.5">
+            {["Savings", "Yield", "Offramp"].map((name, i) => (
+              <motion.div
+                key={name}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: i * 0.15, duration: 0.3 }}
+                className="flex-1 h-[3px] rounded-full overflow-hidden origin-left"
+              >
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: `linear-gradient(90deg, ${ARCH_LAYERS[i].color}, ${ARCH_LAYERS[i].color}88)` }}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
    PANEL ROUTER
 ───────────────────────────────────────────────────────────────── */
 function ScenePanel({ stepId, playing }: { stepId: string; playing: boolean }) {
   switch (stepId) {
-    case "deposit":  return <DepositScene  playing={playing} />;
-    case "optimize": return <OptimizeScene playing={playing} />;
-    case "offramp":  return <OfframpScene  playing={playing} />;
-    case "ai":       return <AiScene       playing={playing} />;
-    default:         return null;
+    case "deposit":       return <DepositScene       playing={playing} />;
+    case "optimize":      return <OptimizeScene      playing={playing} />;
+    case "offramp":       return <OfframpScene       playing={playing} />;
+    case "ai":            return <AiScene            playing={playing} />;
+    case "architecture":  return <ArchitectureScene  playing={playing} />;
+    default:              return null;
   }
 }
 
@@ -879,7 +1110,7 @@ export function HowItWorks() {
           initial={{ opacity: 0, y: 14 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, delay: 0.3 }}
-          className="grid grid-cols-2 lg:grid-cols-4 border border-t-0 border-black/[0.08] overflow-hidden"
+          className="grid grid-cols-3 lg:grid-cols-5 border border-t-0 border-black/[0.08] overflow-hidden"
           style={{ background: "hsl(0,0%,88%)" }}
         >
           {STEPS.map((s, i) => {
@@ -890,7 +1121,7 @@ export function HowItWorks() {
                 onClick={() => setActive(i)}
                 className={`relative flex flex-col gap-2 px-6 py-6 text-left border-0 outline-none cursor-pointer transition-all duration-300 ${
                   i < STEPS.length - 1 ? "border-r border-black/[0.07]" : ""
-                } ${i >= 2 ? "border-t border-black/[0.07] lg:border-t-0" : ""} ${
+                } ${i >= 3 ? "border-t border-black/[0.07] lg:border-t-0" : ""} ${
                   isActive ? "bg-white/50" : "hover:bg-white/25"
                 }`}
               >
