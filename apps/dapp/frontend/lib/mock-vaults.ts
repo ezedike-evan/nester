@@ -1,4 +1,9 @@
-import type { Vault, VaultAllocation, ApyDataPoint, RiskTier } from "@/lib/types/vault";
+import type {
+  Vault,
+  VaultAllocation,
+  ApyDataPoint,
+  RiskTier,
+} from "@/lib/types/vault";
 
 export type { Vault, VaultAllocation, ApyDataPoint, RiskTier };
 
@@ -12,7 +17,7 @@ function generateApyHistory(
   for (let i = 89; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
-    const direction = ((i * 7) % 3) - 1; // -1, 0, or 1
+    const direction = ((i * 7) % 3) - 1;
     current = Math.max(
       1,
       current +
@@ -87,7 +92,12 @@ export const VAULTS: Vault[] = [
     userCount: 987,
     allocations: [
       { protocol: "Kamino LP", percentage: 50, apy: 14.8, color: "#f97316" },
-      { protocol: "Blend Leveraged", percentage: 30, apy: 12.1, color: "#2EBAC6" },
+      {
+        protocol: "Blend Leveraged",
+        percentage: 30,
+        apy: 12.1,
+        color: "#2EBAC6",
+      },
       { protocol: "Volatile LP", percentage: 20, apy: 11.5, color: "#B6509E" },
     ],
     supportedAssets: ["USDC", "USDT"],
@@ -106,7 +116,12 @@ export const VAULTS: Vault[] = [
     tvl: 8_900_000,
     userCount: 4_512,
     allocations: [
-      { protocol: "Multi-Protocol Index", percentage: 60, apy: 12.2, color: "#6366f1" },
+      {
+        protocol: "Multi-Protocol Index",
+        percentage: 60,
+        apy: 12.2,
+        color: "#6366f1",
+      },
       { protocol: "Rebalancer", percentage: 25, apy: 10.8, color: "#2EBAC6" },
       { protocol: "Stable Buffer", percentage: 15, apy: 7.4, color: "#B6509E" },
     ],
