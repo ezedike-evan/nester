@@ -34,6 +34,7 @@ func requiredEnv(t *testing.T) {
 }
 
 func TestLoadFromDotEnv(t *testing.T) {
+	baseEnv(t)
 	t.Setenv("DATABASE_DSN", "")
 	t.Setenv("STELLAR_NETWORK_PASSPHRASE", "")
 	t.Setenv("STELLAR_RPC_URL", "")
@@ -75,6 +76,7 @@ func TestLoadFromDotEnv(t *testing.T) {
 }
 
 func TestLoadMissingRequiredFields(t *testing.T) {
+	baseEnv(t)
 	t.Setenv("DATABASE_DSN", "")
 	t.Setenv("STELLAR_NETWORK_PASSPHRASE", "")
 	t.Setenv("STELLAR_RPC_URL", "")
@@ -101,10 +103,8 @@ func TestLoadMissingRequiredFields(t *testing.T) {
 }
 
 func TestLoadTypeCoercionErrors(t *testing.T) {
-	t.Setenv("DATABASE_DSN", "postgres://postgres:postgres@localhost:5432/nester?sslmode=disable")
-	t.Setenv("STELLAR_NETWORK_PASSPHRASE", "Test Network")
-	t.Setenv("STELLAR_RPC_URL", "https://rpc.example.com")
-	t.Setenv("STELLAR_HORIZON_URL", "https://horizon.example.com")
+	baseEnv(t)
+	requiredEnv(t)
 	t.Setenv("SERVER_PORT", "not-a-number")
 	t.Setenv("DATABASE_CONNECTION_TIMEOUT", "forever")
 
