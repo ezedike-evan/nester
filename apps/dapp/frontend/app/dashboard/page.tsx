@@ -2,53 +2,37 @@
 
 import { useWallet } from "@/components/wallet-provider";
 import { Navbar } from "@/components/navbar";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { truncateAddress } from "@/lib/utils";
-import {
-    TrendingUp,
-    Vault,
-    ArrowDownToLine,
-    Sparkles,
-    ArrowUpRight,
-} from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 
-const stats = [
-    {
-        label: "Total Balance",
-        value: "$0.00",
-        change: null,
-        icon: Vault,
-    },
-    {
-        label: "Total Yield Earned",
-        value: "$0.00",
-        change: "+0.00%",
-        icon: TrendingUp,
-    },
-    {
-        label: "Active Vaults",
-        value: "0",
-        change: null,
-        icon: ArrowDownToLine,
-    },
-    {
-        label: "Prometheus Insights",
-        value: "—",
-        change: null,
-        icon: Sparkles,
-    },
-];
+// Mock Data
+import { 
+    mockTransactions, 
+    mockVaultPositions, 
+    mockPortfolioStats 
+} from "@/lib/mock-data";
+
+// Components
+import { DashboardStats } from "@/components/dashboard/dashboard-stats";
+import { VaultPositionsTable } from "@/components/dashboard/vault-positions-table";
+import { PortfolioCharts } from "@/components/dashboard/portfolio-charts";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
 
 export default function Dashboard() {
     const { isConnected, address } = useWallet();
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!isConnected) {
             router.push("/");
+        } else {
+            // Simulate initial data fetch
+            const timer = setTimeout(() => setIsLoading(false), 800);
+            return () => clearTimeout(timer);
         }
     }, [isConnected, router]);
 
@@ -60,8 +44,8 @@ export default function Dashboard() {
 
             <main className="mx-auto max-w-[1536px] px-4 md:px-8 lg:px-12 xl:px-16 pt-20 md:pt-28 pb-24 md:pb-16">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                     className="mb-8 md:mb-10"
                 >
@@ -176,8 +160,6 @@ export default function Dashboard() {
                                 management.
                             </p>
                         </div>
-                    </motion.div>
-                </div>
 
                 {/* Recent Activity */}
                 <motion.div
@@ -194,7 +176,7 @@ export default function Dashboard() {
                             No recent transactions
                         </p>
                     </div>
-                </motion.div>
+                </div>
             </main>
         </div>
     );
