@@ -149,7 +149,7 @@ export default function Dashboard() {
                             </h2>
                             <Link
                                 href="/dashboard/vaults"
-                                className="flex min-h-[44px] items-center px-2 text-xs font-medium text-foreground/60 transition-colors hover:text-foreground"
+                                className="flex min-h-11 items-center px-2 text-xs font-medium text-foreground/60 transition-colors hover:text-foreground"
                             >
                                 Add Deposit
                             </Link>
@@ -168,7 +168,7 @@ export default function Dashboard() {
                                 </p>
                                 <div className="mt-5 inline-block rounded-full border border-black/15 bg-white p-[3px] shadow-lg">
                                     <Link href="/dashboard/vaults">
-                                        <button className="min-h-[44px] rounded-full bg-gradient-to-r from-[#0a0a0a] to-[#1a1a2e] px-6 py-2.5 text-sm font-medium text-white transition-all hover:from-[#1a1a2e] hover:to-[#0a0a0a]">
+                                        <button className="min-h-11 rounded-full bg-linear-to-r from-[#0a0a0a] to-[#1a1a2e] px-6 py-2.5 text-sm font-medium text-white transition-all hover:from-[#1a1a2e] hover:to-[#0a0a0a]">
                                             Get Started
                                         </button>
                                     </Link>
