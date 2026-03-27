@@ -310,13 +310,13 @@ fn test_multiple_large_deposits_overflow_protection() {
     let user_a = Address::generate(&env);
     let user_b = Address::generate(&env);
 
-    let large_amount: i128 = i128::MAX / 2;
+    let large_amount: i128 = (i128::MAX / 2) + 1;
     mint_tokens(&env, &token_address, &user_a, large_amount);
     mint_tokens(&env, &token_address, &user_b, large_amount);
 
     client.deposit(&user_a, &large_amount);
 
-    // Second large deposit should panic due to overflow in total tracking
+    // Second deposit would make total exceed i128::MAX, causing overflow
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         client.deposit(&user_b, &large_amount);
     }));
