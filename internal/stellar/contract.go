@@ -3,6 +3,7 @@ package stellar
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/stellar/go-stellar-sdk/support/log"
@@ -91,15 +92,14 @@ func (ci *ContractInvoker) buildContractInvocation(
 	method string,
 	args []interface{},
 ) (*txnbuild.Transaction, error) {
-	if contractID == "" {
-		return nil, fmt.Errorf("contract ID is required")
-	}
-	// Validate contract ID format (Stellar contract IDs are 56 characters starting with 'C')
-	if len(contractID) < 56 {
-		return nil, fmt.Errorf("contract ID is required")
+	if err := validateContractID(contractID); err != nil {
+		return nil, err
 	}
 	if method == "" {
 		return nil, fmt.Errorf("method is required")
+	}
+	if err := validateSorobanArgs(args); err != nil {
+		return nil, fmt.Errorf("invalid contract arguments: %w", err)
 	}
 
 	// Note: This is a simplified implementation. In production, this would:
@@ -113,6 +113,43 @@ func (ci *ContractInvoker) buildContractInvocation(
 	// This would normally return a properly constructed transaction
 	// For now, returning nil as we'll need the actual Soroban RPC setup
 	return nil, nil
+}
+
+func validateContractID(contractID string) error {
+	if contractID == "" {
+		return fmt.Errorf("contract ID is required")
+	}
+	if len(contractID) != 56 || contractID[0] != 'C' {
+		return fmt.Errorf("contract ID must be a 56-character Stellar contract address starting with C")
+	}
+	return nil
+}
+
+func validateSorobanArgs(args []interface{}) error {
+	for index, arg := range args {
+		if err := validateSorobanArg(arg); err != nil {
+			return fmt.Errorf("arg %d: %w", index, err)
+		}
+	}
+	return nil
+}
+
+func validateSorobanArg(arg interface{}) error {
+	switch value := arg.(type) {
+	case nil, bool, string, []byte,
+		int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64:
+		return nil
+	case []interface{}:
+		for index, nested := range value {
+			if err := validateSorobanArg(nested); err != nil {
+				return fmt.Errorf("vec[%d]: %w", index, err)
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported argument type %T", arg)
+	}
 }
 
 // submitWithRetries submits a transaction with exponential backoff retry logic
@@ -211,17 +248,5 @@ func isRetryableError(err error) bool {
 
 // contains checks if a string contains a substring (case-insensitive)
 func contains(str, substr string) bool {
-	for i := 0; i <= len(str)-len(substr); i++ {
-		match := true
-		for j := 0; j < len(substr); j++ {
-			if str[i+j] != substr[j] {
-				match = false
-				break
-			}
-		}
-		if match {
-			return true
-		}
-	}
-	return false
+	return strings.Contains(strings.ToLower(str), strings.ToLower(substr))
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stellar/go-stellar-sdk/txnbuild"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +24,11 @@ func TestIsRetryableError(t *testing.T) {
 			name: "timeout error",
 			err:  errors.New("context deadline exceeded"),
 			want: false, // "timeout" is not present, but we can adjust
+		},
+		{
+			name: "uppercase timeout",
+			err:  errors.New("I/O TIMEOUT"),
+			want: true,
 		},
 		{
 			name: "connection error",
@@ -77,6 +83,12 @@ func TestContains(t *testing.T) {
 			name:   "substring in middle",
 			str:    "error: timeout: retry",
 			substr: "timeout",
+			want:   true,
+		},
+		{
+			name:   "case insensitive match",
+			str:    "Connection Refused",
+			substr: "connection refused",
 			want:   true,
 		},
 		{
@@ -144,6 +156,66 @@ func TestSimulateContract_EmptyMethod(t *testing.T) {
 	)
 	assert.Nil(t, result)
 	assert.Error(t, err)
+}
+
+func TestBuildContractInvocation_RejectsInvalidContractIDs(t *testing.T) {
+	invoker := NewContractInvoker(&Client{config: Config{MaxRetries: 3, RetryBackoff: 100}, networkID: getNetworkID(Testnet)})
+
+	tests := []struct {
+		name       string
+		contractID string
+		wantErr    string
+	}{
+		{name: "empty", contractID: "", wantErr: "contract ID is required"},
+		{name: "short", contractID: "SHORT", wantErr: "56-character Stellar contract address"},
+		{name: "wrong prefix", contractID: "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4", wantErr: "56-character Stellar contract address"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := invoker.buildContractInvocation(context.Background(), tt.contractID, "method", nil)
+			assert.Nil(t, tx)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+}
+
+func TestBuildContractInvocation_ValidatesSupportedArgumentShapes(t *testing.T) {
+	invoker := NewContractInvoker(&Client{config: Config{MaxRetries: 3, RetryBackoff: 100}, networkID: getNetworkID(Testnet)})
+
+	tests := []struct {
+		name string
+		args []interface{}
+	}{
+		{name: "i128-like integer", args: []interface{}{int64(123456789)}},
+		{name: "address string", args: []interface{}{"GBVH6U5PEFXPXPJ4GPXVYACRF4NZQA5QBCZLLPQGHXWWK6NXPV6IYGGX"}},
+		{name: "plain string", args: []interface{}{"hello"}},
+		{name: "nested vec", args: []interface{}{[]interface{}{"a", int64(2), []interface{}{true, []byte("x")}}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := invoker.buildContractInvocation(context.Background(), "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4", "method", tt.args)
+			assert.NoError(t, err)
+			assert.Nil(t, tx)
+		})
+	}
+}
+
+func TestBuildContractInvocation_RejectsUnsupportedArgumentShapes(t *testing.T) {
+	invoker := NewContractInvoker(&Client{config: Config{MaxRetries: 3, RetryBackoff: 100}, networkID: getNetworkID(Testnet)})
+
+	tx, err := invoker.buildContractInvocation(
+		context.Background(),
+		"CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4",
+		"method",
+		[]interface{}{map[string]string{"not": "supported"}},
+	)
+
+	assert.Nil(t, tx)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported argument type")
 }
 
 func TestContractInvoker_Creation(t *testing.T) {
@@ -270,12 +342,12 @@ func TestInvokeContract_InvalidContractIDFormat(t *testing.T) {
 		{
 			name:       "too short",
 			contractID: "SHORT",
-			wantErr:    "contract ID is required",
+			wantErr:    "56-character Stellar contract address",
 		},
 		{
 			name:       "invalid prefix",
 			contractID: "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4",
-			wantErr:    "contract ID is required",
+			wantErr:    "56-character Stellar contract address",
 		},
 	}
 
@@ -484,6 +556,15 @@ func TestSubmitTransaction_NilTransaction(t *testing.T) {
 	assert.Nil(t, result)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "transaction is nil")
+}
+
+func TestSubmitTransaction_ReturnsPlaceholderResultForNonNilTransaction(t *testing.T) {
+	invoker := NewContractInvoker(&Client{config: Config{MaxRetries: 3, RetryBackoff: 100}, networkID: getNetworkID(Testnet)})
+
+	result, err := invoker.submitTransaction(context.Background(), &txnbuild.Transaction{})
+	assert.NoError(t, err)
+	assert.True(t, result.IsSuccess)
+	assert.Equal(t, "0x00", result.TransactionHash)
 }
 
 func TestSubmitWithRetries_ContextCancellation(t *testing.T) {
