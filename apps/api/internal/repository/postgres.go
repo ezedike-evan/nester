@@ -21,7 +21,11 @@ func NewPostgresDB(cfg config.DatabaseConfig) (*PostgresDB, error) {
 		return nil, fmt.Errorf("unable to parse database config: %w", err)
 	}
 
-	poolConfig.MaxConns = int32(cfg.PoolSize())
+	poolSize := cfg.PoolSize()
+	if poolSize > 25 {
+		poolSize = 25
+	}
+	poolConfig.MaxConns = int32(poolSize)
 	poolConfig.MaxConnIdleTime = 5 * time.Minute
 	poolConfig.MaxConnLifetime = time.Hour
 
