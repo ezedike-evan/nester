@@ -487,6 +487,7 @@ func TestLoadEmptyEnvVarsTreatedAsUnset(t *testing.T) {
 		"STELLAR_NETWORK_PASSPHRASE=Test Network",
 		"STELLAR_RPC_URL=https://rpc.example.com",
 		"STELLAR_HORIZON_URL=https://horizon.example.com",
+		"AUTH_JWT_SECRET=this-is-a-very-secret-jwt-key-that-is-at-least-thirty-two-bytes",
 	}, "\n"))
 	chdir(t, dir)
 
