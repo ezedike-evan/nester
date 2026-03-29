@@ -18,8 +18,8 @@ const CB_TRIGGER: Symbol = symbol_short!("CB_TRIG");
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct FeeConfig {
-    pub performance_fee_bps: u32,       // basis points (e.g., 1000 = 10%)
-    pub management_fee_bps: u32,        // annual basis points (e.g., 50 = 0.5%)
+    pub performance_fee_bps: u32,      // basis points (e.g., 1000 = 10%)
+    pub management_fee_bps: u32,       // annual basis points (e.g., 50 = 0.5%)
     pub early_withdrawal_fee_bps: u32, // bps (e.g., 10 = 0.1%)
     pub treasury_address: Address,
 }
@@ -27,8 +27,8 @@ pub struct FeeConfig {
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct CircuitBreakerConfig {
-    pub threshold_bps: u32,    // e.g., 2000 = 20%
-    pub window_seconds: u64,   // e.g., 7200 = 2h
+    pub threshold_bps: u32,  // e.g., 2000 = 20%
+    pub window_seconds: u64, // e.g., 7200 = 2h
 }
 
 #[contracttype]
@@ -135,13 +135,13 @@ pub enum VaultStatus {
 enum DataKey {
     Token,
     Status,
-    Balance(Address),    // Stores shares
-    TotalShares,        // Stores total shares in circulation
-    TotalAssets,        // Stores total assets (tokens) in vault (pre-fee)
+    Balance(Address), // Stores shares
+    TotalShares,      // Stores total shares in circulation
+    TotalAssets,      // Stores total assets (tokens) in vault (pre-fee)
     FeeConfig,
     LastFeeAccrual,
     AccruedFees,
-    MinLockPeriod,      // For early withdrawal fee
+    MinLockPeriod, // For early withdrawal fee
     DepositTime(Address),
     MaxDeposit,
     RebalanceThreshold,
@@ -198,9 +198,7 @@ fn get_total_shares(env: &Env) -> i128 {
 }
 
 fn set_total_shares(env: &Env, amount: i128) {
-    env.storage()
-        .instance()
-        .set(&DataKey::TotalShares, &amount);
+    env.storage().instance().set(&DataKey::TotalShares, &amount);
 }
 
 fn get_total_assets(env: &Env) -> i128 {
@@ -211,9 +209,7 @@ fn get_total_assets(env: &Env) -> i128 {
 }
 
 fn set_total_assets(env: &Env, amount: i128) {
-    env.storage()
-        .instance()
-        .set(&DataKey::TotalAssets, &amount);
+    env.storage().instance().set(&DataKey::TotalAssets, &amount);
 }
 
 fn get_accrued_fees(env: &Env) -> i128 {
@@ -224,9 +220,7 @@ fn get_accrued_fees(env: &Env) -> i128 {
 }
 
 fn set_accrued_fees(env: &Env, amount: i128) {
-    env.storage()
-        .instance()
-        .set(&DataKey::AccruedFees, &amount);
+    env.storage().instance().set(&DataKey::AccruedFees, &amount);
 }
 
 fn get_user_principal(env: &Env, user: &Address) -> i128 {
@@ -276,15 +270,23 @@ fn get_fee_config(env: &Env) -> FeeConfig {
 }
 
 fn accrue_management_fee(env: &Env) {
-    let last_accrual: u64 = env.storage().instance().get(&DataKey::LastFeeAccrual).unwrap_or(env.ledger().timestamp());
+    let last_accrual: u64 = env
+        .storage()
+        .instance()
+        .get(&DataKey::LastFeeAccrual)
+        .unwrap_or(env.ledger().timestamp());
     let now = env.ledger().timestamp();
     let elapsed = now.saturating_sub(last_accrual);
 
     if elapsed > 0 {
         let config = get_fee_config(env);
         let total_assets = get_total_assets(env);
-        let fee = nester_common::fees::calculate_management_fee(total_assets, config.management_fee_bps, elapsed);
-        
+        let fee = nester_common::fees::calculate_management_fee(
+            total_assets,
+            config.management_fee_bps,
+            elapsed,
+        );
+
         if fee > 0 {
             let accrued = get_accrued_fees(env);
             set_accrued_fees(env, accrued + fee);
@@ -294,12 +296,20 @@ fn accrue_management_fee(env: &Env) {
 }
 
 fn check_circuit_breaker(env: &Env, amount: i128) {
-    let config: CircuitBreakerConfig = env.storage().instance().get(&DataKey::CircuitBreakerConfig).expect("CB config missing");
-    let mut window: WithdrawalWindow = env.storage().instance().get(&DataKey::WithdrawalWindow).unwrap_or(WithdrawalWindow { 
-        last_update: env.ledger().timestamp(), 
-        sum: 0 
-    });
-    
+    let config: CircuitBreakerConfig = env
+        .storage()
+        .instance()
+        .get(&DataKey::CircuitBreakerConfig)
+        .expect("CB config missing");
+    let mut window: WithdrawalWindow = env
+        .storage()
+        .instance()
+        .get(&DataKey::WithdrawalWindow)
+        .unwrap_or(WithdrawalWindow {
+            last_update: env.ledger().timestamp(),
+            sum: 0,
+        });
+
     let now = env.ledger().timestamp();
     if now >= window.last_update + config.window_seconds {
         window.last_update = now;
@@ -307,19 +317,29 @@ fn check_circuit_breaker(env: &Env, amount: i128) {
     } else {
         window.sum += amount;
     }
-    
-    env.storage().instance().set(&DataKey::WithdrawalWindow, &window);
-    
+
+    env.storage()
+        .instance()
+        .set(&DataKey::WithdrawalWindow, &window);
+
     let total_assets = get_total_assets(env);
     let threshold = total_assets * config.threshold_bps as i128 / 10000;
-    
+
     if threshold > 0 && window.sum > threshold {
-        env.storage().instance().set(&DataKey::Status, &VaultStatus::Paused);
-        emit_event(env, VAULT, CB_TRIGGER, env.current_contract_address(), CircuitBreakerEventData {
-            withdrawal_amount: amount,
-            window_sum: window.sum,
-            threshold,
-        });
+        env.storage()
+            .instance()
+            .set(&DataKey::Status, &VaultStatus::Paused);
+        emit_event(
+            env,
+            VAULT,
+            CB_TRIGGER,
+            env.current_contract_address(),
+            CircuitBreakerEventData {
+                withdrawal_amount: amount,
+                window_sum: window.sum,
+                threshold,
+            },
+        );
     }
 }
 
@@ -342,39 +362,47 @@ impl VaultContract {
         env.storage()
             .instance()
             .set(&DataKey::Status, &VaultStatus::Active);
-        env.storage()
-            .instance()
-            .set(&DataKey::TotalShares, &0_i128);
-        env.storage()
-            .instance()
-            .set(&DataKey::TotalAssets, &0_i128);
-        env.storage()
-            .instance()
-            .set(&DataKey::AccruedFees, &0_i128);
+        env.storage().instance().set(&DataKey::TotalShares, &0_i128);
+        env.storage().instance().set(&DataKey::TotalAssets, &0_i128);
+        env.storage().instance().set(&DataKey::AccruedFees, &0_i128);
         env.storage()
             .instance()
             .set(&DataKey::LastFeeAccrual, &env.ledger().timestamp());
-        
+
         let fee_config = FeeConfig {
-            performance_fee_bps: 1000, // 10%
-            management_fee_bps: 50,    // 0.5%
+            performance_fee_bps: 1000,    // 10%
+            management_fee_bps: 50,       // 0.5%
             early_withdrawal_fee_bps: 10, // 0.1%
             treasury_address: treasury,
         };
-        env.storage().instance().set(&DataKey::FeeConfig, &fee_config);
-        env.storage().instance().set(&DataKey::MinLockPeriod, &86400_u64); // 1 day
-        
+        env.storage()
+            .instance()
+            .set(&DataKey::FeeConfig, &fee_config);
+        env.storage()
+            .instance()
+            .set(&DataKey::MinLockPeriod, &86400_u64); // 1 day
+
         // Emergency configs
-        env.storage().instance().set(&DataKey::MaxDeposit, &i128::MAX);
-        env.storage().instance().set(&DataKey::RebalanceThreshold, &500_u32); // 5%
-        env.storage().instance().set(&DataKey::CircuitBreakerConfig, &CircuitBreakerConfig { 
-            threshold_bps: 2000, // 20%
-            window_seconds: 7200  // 2h
-        });
-        env.storage().instance().set(&DataKey::WithdrawalWindow, &WithdrawalWindow { 
-            last_update: env.ledger().timestamp(), 
-            sum: 0 
-        });
+        env.storage()
+            .instance()
+            .set(&DataKey::MaxDeposit, &i128::MAX);
+        env.storage()
+            .instance()
+            .set(&DataKey::RebalanceThreshold, &500_u32); // 5%
+        env.storage().instance().set(
+            &DataKey::CircuitBreakerConfig,
+            &CircuitBreakerConfig {
+                threshold_bps: 2000,  // 20%
+                window_seconds: 7200, // 2h
+            },
+        );
+        env.storage().instance().set(
+            &DataKey::WithdrawalWindow,
+            &WithdrawalWindow {
+                last_update: env.ledger().timestamp(),
+                sum: 0,
+            },
+        );
     }
 
     pub fn set_max_deposit(env: Env, caller: Address, amount: i128) {
@@ -386,13 +414,17 @@ impl VaultContract {
     pub fn set_rebalance_threshold(env: Env, caller: Address, bps: u32) {
         caller.require_auth();
         AccessControl::require_role(&env, &caller, Role::Admin);
-        env.storage().instance().set(&DataKey::RebalanceThreshold, &bps);
+        env.storage()
+            .instance()
+            .set(&DataKey::RebalanceThreshold, &bps);
     }
 
     pub fn set_circuit_breaker_config(env: Env, caller: Address, config: CircuitBreakerConfig) {
         caller.require_auth();
         AccessControl::require_role(&env, &caller, Role::Admin);
-        env.storage().instance().set(&DataKey::CircuitBreakerConfig, &config);
+        env.storage()
+            .instance()
+            .set(&DataKey::CircuitBreakerConfig, &config);
     }
 
     pub fn set_early_withdrawal_fee(env: Env, caller: Address, bps: u32) {
@@ -415,7 +447,9 @@ impl VaultContract {
         if fee_bps > 500 {
             panic_with_error!(&env, ContractError::InvalidAmount); // Max 500 bps (5%)
         }
-        env.storage().instance().set(&DataKey::EmergencyFeeBps, &fee_bps);
+        env.storage()
+            .instance()
+            .set(&DataKey::EmergencyFeeBps, &fee_bps);
         Ok(())
     }
 
@@ -484,7 +518,7 @@ impl VaultContract {
     pub fn report_yield(env: Env, caller: Address, amount: i128) {
         caller.require_auth();
         AccessControl::require_role(&env, &caller, Role::Manager);
-        
+
         let total_assets = get_total_assets(&env);
         set_total_assets(&env, total_assets + amount);
     }
@@ -492,8 +526,9 @@ impl VaultContract {
     pub fn collect_fees(env: Env, caller: Address) {
         caller.require_auth();
         // Allow ADMIN or MANAGER to collect fees
-        if !AccessControl::has_role(&env, &caller, Role::Admin) && 
-           !AccessControl::has_role(&env, &caller, Role::Manager) {
+        if !AccessControl::has_role(&env, &caller, Role::Admin)
+            && !AccessControl::has_role(&env, &caller, Role::Manager)
+        {
             panic_with_error!(&env, ContractError::Unauthorized);
         }
 
@@ -502,11 +537,11 @@ impl VaultContract {
         if fees > 0 {
             let config = get_fee_config(&env);
             let token_address = self::VaultContract::get_token(env.clone());
-            
+
             token::Client::new(&env, &token_address).transfer(
                 &env.current_contract_address(),
                 &config.treasury_address,
-                &fees
+                &fees,
             );
 
             // Notify treasury - assuming it has receive_fees method
@@ -516,14 +551,14 @@ impl VaultContract {
             env.invoke_contract::<()>(
                 &config.treasury_address,
                 &Symbol::new(&env, "receive_fees"),
-                (fees,).into_val(&env)
+                (fees,).into_val(&env),
             );
 
             set_accrued_fees(&env, 0);
-            
+
             let total_assets = get_total_assets(&env);
             set_total_assets(&env, total_assets - fees);
-            
+
             let current_reserves = get_vault_liquid_reserves(&env);
             set_vault_liquid_reserves(&env, current_reserves - fees);
         }
@@ -533,8 +568,12 @@ impl VaultContract {
     pub fn deposit(env: Env, user: Address, amount: i128) -> i128 {
         require_initialized(&env);
         require_active(&env);
-        
-        let max_deposit: i128 = env.storage().instance().get(&DataKey::MaxDeposit).unwrap_or(i128::MAX);
+
+        let max_deposit: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::MaxDeposit)
+            .unwrap_or(i128::MAX);
         if amount > max_deposit {
             panic_with_error!(&env, ContractError::ExceedsLimit);
         }
@@ -566,14 +605,17 @@ impl VaultContract {
         set_shares(&env, &user, new_user_shares);
         set_total_shares(&env, total_shares + shares_to_mint);
         set_total_assets(&env, total_assets + amount);
-        
+
         let current_principal = get_user_principal(&env, &user);
         set_user_principal(&env, &user, current_principal + amount);
-        
+
         let current_reserves = get_vault_liquid_reserves(&env);
         set_vault_liquid_reserves(&env, current_reserves + amount);
-        
-        env.storage().persistent().set(&DataKey::DepositTime(user.clone()), &env.ledger().timestamp());
+
+        env.storage().persistent().set(
+            &DataKey::DepositTime(user.clone()),
+            &env.ledger().timestamp(),
+        );
 
         emit_event(
             &env,
@@ -610,17 +652,23 @@ impl VaultContract {
             if liquid_reserves >= req.amount {
                 token_client.transfer(&contract_address, &req.user, &req.amount);
                 liquid_reserves -= req.amount;
-                
-                emit_event(&env, VAULT, symbol_short!("ERG_PROC"), req.user.clone(), EmergencyWithdrawProcessedEventData {
-                    user: req.user.clone(),
-                    amount_returned: req.amount,
-                });
+
+                emit_event(
+                    &env,
+                    VAULT,
+                    symbol_short!("ERG_PROC"),
+                    req.user.clone(),
+                    EmergencyWithdrawProcessedEventData {
+                        user: req.user.clone(),
+                        amount_returned: req.amount,
+                    },
+                );
             } else {
                 break;
             }
             i += 1;
         }
-        
+
         let mut new_queue = soroban_sdk::Vec::new(&env);
         while i < queue.len() {
             new_queue.push_back(queue.get(i).unwrap());
@@ -654,26 +702,40 @@ impl VaultContract {
         let available_assets = total_assets - accrued_fees;
 
         let mut assets_to_withdraw = shares * available_assets / total_shares;
-        
+
         // Trigger circuit breaker check
         check_circuit_breaker(&env, assets_to_withdraw);
-        
+
         // Fee logic
         let config = get_fee_config(&env);
         let mut total_fee = 0_i128;
 
         // 1. Performance fee (10% of yield)
-        let yield_part = assets_to_withdraw - shares; 
+        let yield_part = assets_to_withdraw - shares;
         if yield_part > 0 {
-            let perf_fee = nester_common::fees::calculate_performance_fee(yield_part, config.performance_fee_bps);
+            let perf_fee = nester_common::fees::calculate_performance_fee(
+                yield_part,
+                config.performance_fee_bps,
+            );
             total_fee += perf_fee;
         }
 
         // 2. Early withdrawal fee (0.1%)
-        let deposit_time: u64 = env.storage().persistent().get(&DataKey::DepositTime(user.clone())).unwrap_or(0);
-        let min_lock: u64 = env.storage().instance().get(&DataKey::MinLockPeriod).unwrap_or(0);
+        let deposit_time: u64 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::DepositTime(user.clone()))
+            .unwrap_or(0);
+        let min_lock: u64 = env
+            .storage()
+            .instance()
+            .get(&DataKey::MinLockPeriod)
+            .unwrap_or(0);
         if env.ledger().timestamp() < deposit_time + min_lock {
-            let early_fee = nester_common::fees::calculate_withdrawal_fee(assets_to_withdraw, config.early_withdrawal_fee_bps);
+            let early_fee = nester_common::fees::calculate_withdrawal_fee(
+                assets_to_withdraw,
+                config.early_withdrawal_fee_bps,
+            );
             total_fee += early_fee;
         }
 
@@ -683,13 +745,17 @@ impl VaultContract {
         let token_address = self::VaultContract::get_token(env.clone());
         let contract_address = env.current_contract_address();
 
-        token::Client::new(&env, &token_address).transfer(&contract_address, &user, &assets_to_withdraw);
+        token::Client::new(&env, &token_address).transfer(
+            &contract_address,
+            &user,
+            &assets_to_withdraw,
+        );
 
         let new_user_shares = current_shares - shares;
         set_shares(&env, &user, new_user_shares);
         set_total_shares(&env, total_shares - shares);
         set_total_assets(&env, total_assets - assets_to_withdraw);
-        
+
         let current_principal = get_user_principal(&env, &user);
         let principal_to_remove = if current_shares > 0 {
             current_principal * shares / current_shares
@@ -697,7 +763,7 @@ impl VaultContract {
             0
         };
         set_user_principal(&env, &user, current_principal - principal_to_remove);
-        
+
         let current_reserves = get_vault_liquid_reserves(&env);
         set_vault_liquid_reserves(&env, current_reserves - assets_to_withdraw);
 
@@ -718,15 +784,22 @@ impl VaultContract {
         new_user_shares
     }
 
-    pub fn emergency_withdraw_preview(env: Env, user: Address) -> Result<EmergencyPreview, ContractError> {
+    pub fn emergency_withdraw_preview(
+        env: Env,
+        user: Address,
+    ) -> Result<EmergencyPreview, ContractError> {
         let principal = get_user_principal(&env, &user);
-        let fee_bps: u32 = env.storage().instance().get(&DataKey::EmergencyFeeBps).unwrap_or(0);
+        let fee_bps: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::EmergencyFeeBps)
+            .unwrap_or(0);
         let emergency_fee = principal * (fee_bps as i128) / 10_000;
         let estimated_return = principal - emergency_fee;
-        
+
         let vault_liquid_reserves = get_vault_liquid_reserves(&env);
         let can_process = vault_liquid_reserves >= estimated_return;
-        
+
         Ok(EmergencyPreview {
             principal_deposited: principal,
             emergency_fee,
@@ -742,7 +815,7 @@ impl VaultContract {
         if !is_paused(&env) {
             panic_with_error!(&env, ContractError::InvalidOperation);
         }
-        
+
         user.require_auth();
 
         let principal = get_user_principal(&env, &user);
@@ -750,7 +823,11 @@ impl VaultContract {
             panic_with_error!(&env, ContractError::InvalidAmount);
         }
 
-        let fee_bps: u32 = env.storage().instance().get(&DataKey::EmergencyFeeBps).unwrap_or(0);
+        let fee_bps: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::EmergencyFeeBps)
+            .unwrap_or(0);
         let fee = principal * (fee_bps as i128) / 10_000;
         let return_amount = principal - fee;
 
@@ -759,17 +836,23 @@ impl VaultContract {
         let shares = get_shares(&env, &user);
         let total_shares = get_total_shares(&env);
         let total_assets = get_total_assets(&env);
-        
+
         set_shares(&env, &user, 0);
         set_total_shares(&env, total_shares - shares);
         set_total_assets(&env, total_assets - principal);
         set_user_principal(&env, &user, 0);
 
-        emit_event(&env, VAULT, symbol_short!("ERG_REQ"), user.clone(), EmergencyWithdrawRequestedEventData {
-            user: user.clone(),
-            amount: return_amount,
-            fee_applied: fee,
-        });
+        emit_event(
+            &env,
+            VAULT,
+            symbol_short!("ERG_REQ"),
+            user.clone(),
+            EmergencyWithdrawRequestedEventData {
+                user: user.clone(),
+                amount: return_amount,
+                fee_applied: fee,
+            },
+        );
 
         if liquid_reserves < return_amount {
             let mut queue = get_emergency_queue(&env);
@@ -778,26 +861,42 @@ impl VaultContract {
                 amount: return_amount,
             });
             set_emergency_queue(&env, &queue);
-            
+
             let position = queue.len();
-            emit_event(&env, VAULT, symbol_short!("ERG_QUE"), user.clone(), EmergencyWithdrawQueuedEventData {
-                user: user.clone(),
-                amount: return_amount,
-                position_in_queue: position,
-            });
-            
+            emit_event(
+                &env,
+                VAULT,
+                symbol_short!("ERG_QUE"),
+                user.clone(),
+                EmergencyWithdrawQueuedEventData {
+                    user: user.clone(),
+                    amount: return_amount,
+                    position_in_queue: position,
+                },
+            );
+
             Ok(0)
         } else {
             let token_address = self::VaultContract::get_token(env.clone());
-            token::Client::new(&env, &token_address).transfer(&env.current_contract_address(), &user, &return_amount);
-            
+            token::Client::new(&env, &token_address).transfer(
+                &env.current_contract_address(),
+                &user,
+                &return_amount,
+            );
+
             set_vault_liquid_reserves(&env, liquid_reserves - return_amount);
-            
-            emit_event(&env, VAULT, symbol_short!("ERG_PROC"), user.clone(), EmergencyWithdrawProcessedEventData {
-                user: user.clone(),
-                amount_returned: return_amount,
-            });
-            
+
+            emit_event(
+                &env,
+                VAULT,
+                symbol_short!("ERG_PROC"),
+                user.clone(),
+                EmergencyWithdrawProcessedEventData {
+                    user: user.clone(),
+                    amount_returned: return_amount,
+                },
+            );
+
             Ok(return_amount)
         }
     }
@@ -810,12 +909,14 @@ impl VaultContract {
         require_initialized(&env);
         let shares = get_shares(&env, &user);
         let total_shares = get_total_shares(&env);
-        if total_shares == 0 { return 0; }
-        
+        if total_shares == 0 {
+            return 0;
+        }
+
         let total_assets = get_total_assets(&env);
         let accrued_fees = get_accrued_fees(&env);
         let available_assets = total_assets - accrued_fees;
-        
+
         shares * available_assets / total_shares
     }
 
@@ -860,18 +961,26 @@ impl VaultContract {
     }
 
     pub fn get_max_deposit(env: Env) -> i128 {
-        env.storage().instance().get(&DataKey::MaxDeposit).unwrap_or(i128::MAX)
+        env.storage()
+            .instance()
+            .get(&DataKey::MaxDeposit)
+            .unwrap_or(i128::MAX)
     }
 
     pub fn get_rebalance_threshold(env: Env) -> u32 {
-        env.storage().instance().get(&DataKey::RebalanceThreshold).unwrap_or(500)
+        env.storage()
+            .instance()
+            .get(&DataKey::RebalanceThreshold)
+            .unwrap_or(500)
     }
 
     pub fn get_circuit_breaker_config(env: Env) -> CircuitBreakerConfig {
-        env.storage().instance().get(&DataKey::CircuitBreakerConfig).expect("CB config missing")
+        env.storage()
+            .instance()
+            .get(&DataKey::CircuitBreakerConfig)
+            .expect("CB config missing")
     }
 }
-
 
 // ---------------------------------------------------------------------------
 // Tests
