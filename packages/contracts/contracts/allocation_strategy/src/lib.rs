@@ -488,28 +488,27 @@ fn default_strategy_params(vault_type: &VaultType) -> StrategyParams {
 }
 
 fn build_default_weights(env: &Env, registry_id: &Address, vault_type: &VaultType) -> Vec<AllocationWeight> {
-    let active_sources = registry_get_active_sources(env, registry_id);
+    // Defensive: always convert to Vec<AllocationWeight> with correct types and length
+    let active_sources: Vec<RegistryYieldSource> = registry_get_active_sources(env, registry_id);
     let mut source_ids = Vec::new(env);
-
     for source in active_sources.iter() {
         source_ids.push_back(source.id);
     }
-
+    let count = source_ids.len() as usize;
     let distribution = match vault_type {
-        VaultType::Conservative => template_distribution(env, source_ids.len() as usize, &[5_000, 3_000, 2_000]),
-        VaultType::Balanced => template_distribution(env, source_ids.len() as usize, &[4_000, 3_500, 2_500]),
-        VaultType::Growth => template_distribution(env, source_ids.len() as usize, &[2_000, 3_000, 5_000]),
-        VaultType::DeFi500 => even_distribution(env, source_ids.len() as usize),
+        VaultType::Conservative => template_distribution(env, count, &[5_000, 3_000, 2_000]),
+        VaultType::Balanced => template_distribution(env, count, &[4_000, 3_500, 2_500]),
+        VaultType::Growth => template_distribution(env, count, &[2_000, 3_000, 5_000]),
+        VaultType::DeFi500 => even_distribution(env, count),
     };
-
     let mut out = Vec::new(env);
     for (index, source_id) in source_ids.iter().enumerate() {
+        let weight_bps = distribution.get(index as u32).unwrap_or(0);
         out.push_back(AllocationWeight {
             source_id,
-            weight_bps: distribution.get(index as u32).unwrap(),
+            weight_bps,
         });
     }
-
     out
 }
 
@@ -762,11 +761,16 @@ fn registry_get_source_status(
 }
 
 fn registry_get_active_sources(env: &Env, registry_id: &Address) -> Vec<RegistryYieldSource> {
-    env.invoke_contract(
+    // Defensive: always return a Vec<RegistryYieldSource> and handle conversion errors
+    let result: Result<Vec<RegistryYieldSource>, _> = env.try_invoke_contract(
         registry_id,
         &Symbol::new(env, "get_active_sources"),
         ().into_val(env),
-    )
+    );
+    match result {
+        Ok(v) => v,
+        Err(_) => Vec::new(env),
+    }
 }
 
 #[cfg(test)]
