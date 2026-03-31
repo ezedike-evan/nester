@@ -49,22 +49,6 @@ impl<'a> RegistryClient<'a> {
         Self { env, contract_id }
     }
 
-    fn has_source(&self, source_id: &Symbol) -> bool {
-        self.env.invoke_contract(
-            self.contract_id,
-            &Symbol::new(self.env, "has_source"),
-            vec![self.env, source_id.clone().into_val(self.env)],
-        )
-    }
-
-    fn get_source_status(&self, source_id: &Symbol) -> SourceStatus {
-        self.env.invoke_contract(
-            self.contract_id,
-            &Symbol::new(self.env, "get_source_status"),
-            vec![self.env, source_id.clone().into_val(self.env)],
-        )
-    }
-
     fn get_active_sources(&self) -> Vec<RegistrySource> {
         self.env.invoke_contract(
             self.contract_id,
@@ -108,32 +92,6 @@ pub enum VaultType {
 pub struct StrategyParams {
     pub rebalance_threshold_bps: u32,
     pub max_weight_bps: u32,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-enum RegistrySourceStatus {
-    Active,
-    Paused,
-    Deprecated,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-enum RegistryProtocolType {
-    Lending,
-    Staking,
-    LP,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct RegistryYieldSource {
-    pub id: Symbol,
-    pub contract_address: Address,
-    pub protocol_type: RegistryProtocolType,
-    pub status: RegistrySourceStatus,
-    pub added_at: u64,
 }
 
 #[contracttype]
@@ -224,7 +182,7 @@ impl AllocationStrategyContract {
                 panic_with_error!(&env, ContractError::StrategyNotFound);
             }
             if registry_get_source_status(&env, &registry_id, &weight.source_id)
-                != RegistrySourceStatus::Active
+                != SourceStatus::Active
             {
                 panic_with_error!(&env, ContractError::InvalidOperation);
             }
@@ -286,7 +244,7 @@ impl AllocationStrategyContract {
             let is_registered = registry_has_source(&env, &registry_id, &entry.source_id);
             let is_active = is_registered
                 && registry_get_source_status(&env, &registry_id, &entry.source_id)
-                    == RegistrySourceStatus::Active;
+                    == SourceStatus::Active;
 
             if is_active && entry.apy_bps > 0 {
                 eligible_indices.push_back(index as u32);
@@ -489,7 +447,7 @@ fn default_strategy_params(vault_type: &VaultType) -> StrategyParams {
 
 fn build_default_weights(env: &Env, registry_id: &Address, vault_type: &VaultType) -> Vec<AllocationWeight> {
     // Defensive: always convert to Vec<AllocationWeight> with correct types and length
-    let active_sources: Vec<RegistryYieldSource> = registry_get_active_sources(env, registry_id);
+    let active_sources: Vec<RegistrySource> = registry_get_active_sources(env, registry_id);
     let mut source_ids = Vec::new(env);
     for source in active_sources.iter() {
         source_ids.push_back(source.id);
@@ -752,7 +710,7 @@ fn registry_get_source_status(
     env: &Env,
     registry_id: &Address,
     source_id: &Symbol,
-) -> RegistrySourceStatus {
+) -> SourceStatus {
     env.invoke_contract(
         registry_id,
         &Symbol::new(env, "get_source_status"),
@@ -760,8 +718,8 @@ fn registry_get_source_status(
     )
 }
 
-fn registry_get_active_sources(env: &Env, registry_id: &Address) -> Vec<RegistryYieldSource> {
-    match env.try_invoke_contract::<Vec<RegistryYieldSource>, Error>(
+fn registry_get_active_sources(env: &Env, registry_id: &Address) -> Vec<RegistrySource> {
+    match env.try_invoke_contract::<Vec<RegistrySource>, Error>(
         registry_id,
         &Symbol::new(env, "get_active_sources"),
         ().into_val(env),

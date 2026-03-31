@@ -8,7 +8,7 @@ use nester_common::{ProtocolType as RegistryProtocolType, SourceStatus as Regist
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, Events},
-    vec, Address, Env, Symbol,
+    vec, Address, Env,
 };
 use yield_registry::{YieldRegistryContract, YieldRegistryContractClient};
 
