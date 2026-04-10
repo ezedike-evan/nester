@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter, notFound } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useWallet } from "@/components/wallet-provider";
 import { AppShell } from "@/components/app-shell";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { ArrowLeft, TrendingUp, Layers, BarChart3, Info } from "lucide-react";
+import { ArrowLeft, TrendingUp, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { getVaultById, formatTvl, type MarketType } from "@/lib/mock-vaults";
 import { APYChart } from "@/components/vaults/apy-chart";
@@ -70,14 +70,14 @@ export default function VaultDetailPage() {
     const router = useRouter();
     const { id } = useParams();
 
+    const vault = getVaultById(id?.toString() ?? "");
+
     useEffect(() => {
         if (!isConnected) router.push("/");
-    }, [isConnected, router]);
+        else if (!vault) router.replace("/vaults");
+    }, [isConnected, vault, router]);
 
-    if (!isConnected) return null;
-
-    const vault = getVaultById(id?.toString() ?? "");
-    if (!vault) notFound();
+    if (!isConnected || !vault) return null;
 
     return (
         <AppShell>
